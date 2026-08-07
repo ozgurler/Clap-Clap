@@ -44,11 +44,20 @@ jobs:
           mkdir -p ~/private_keys
           echo "$APPSTORE_P8" > ~/private_keys/AuthKey_$KEY_ID.p8
 
+      - name: Install provisioning profile
+        env:
+          PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          mkdir -p ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          echo "$PROFILE_BASE64" | base64 --decode > profile.mobileprovision
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp profile.mobileprovision ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/
+
+
       - name: Archive
         env:
           TEAM_ID: ${{ secrets.TEAM_ID }}
-          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
           xcodebuild archive \
             -project ios/App/App.xcodeproj \
@@ -57,30 +66,37 @@ jobs:
             -destination generic/platform=iOS \
             -archivePath build/App.xcarchive \
             DEVELOPMENT_TEAM=$TEAM_ID \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/private_keys/AuthKey_$KEY_ID.p8 \
-            -authenticationKeyID $KEY_ID \
-            -authenticationKeyIssuerID $ISSUER_ID
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="ClapClap AppStore"
+          
 
       - name: Export and upload to App Store Connect
         env:
           KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.TEAM_ID }}
         run: |
-          cat > exportOptions.plist <<'EOF'
+          cat > exportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
             "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0"><dict>
             <key>method</key><string>app-store-connect</string>
             <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.emre.clapclap</key>
+              <string>ClapClap AppStore</string>
+            </dict>
           </dict></plist>
           EOF
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
             -exportPath build \
-            -allowProvisioningUpdates \
             -authenticationKeyPath ~/private_keys/AuthKey_$KEY_ID.p8 \
             -authenticationKeyID $KEY_ID \
             -authenticationKeyIssuerID $ISSUER_ID
