@@ -1,0 +1,9 @@
+{
+	"appId": "com.emre.clapclap",
+	"appName": "Clap! Clap!",
+	"webDir": "www",
+	"ios": {
+		"contentInset": "never"
+	},
+	"packageClassList": []
+}
