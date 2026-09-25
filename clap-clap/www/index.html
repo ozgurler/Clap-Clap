@@ -168,6 +168,47 @@
   #meetGo{width:100%;max-width:350px;margin-top:14px}
   #meetLock{margin-top:12px;font-size:15px;font-weight:800;color:var(--muted);min-height:20px}
 
+
+  /* ---- sound toggle (mockup's top-right button) ---- */
+  .iconbtn{width:52px;height:52px;border:5px solid var(--ink);border-radius:18px;background:var(--panel);
+    box-shadow:0 5px 0 var(--ink);font-family:inherit;font-weight:800;font-size:23px;color:var(--ink);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;position:relative}
+  .iconbtn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+  .iconbtn.off{color:var(--muted)}
+  .iconbtn.off::after{content:'';position:absolute;width:30px;height:5px;border-radius:3px;background:var(--coral);transform:rotate(-45deg)}
+
+  /* ---- pause ---- */
+  #pauseBtn{pointer-events:auto;width:46px;height:46px;border:4px solid var(--ink);border-radius:15px;background:var(--panel);
+    box-shadow:0 4px 0 var(--ink);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer}
+  #pauseBtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+  #pauseBtn i{display:block;width:6px;height:17px;border-radius:2px;background:var(--ink)}
+  #scrPause{background:rgba(253,238,196,.94);justify-content:center}
+  #scrPause .sheet{width:100%;max-width:320px;padding:24px 20px}
+  #scrPause h2{font-size:36px;font-weight:800;margin-bottom:6px}
+  #scrPause p{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:18px}
+  #scrPause .btn{width:100%}
+  #scrPause .btn+.btn{margin-top:12px}
+
+  /* ---- 3-2-1 countdown ---- */
+  #count{position:absolute;top:47%;left:50%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;
+    font-size:clamp(70px,22vw,104px);font-weight:800;color:var(--gold);-webkit-text-stroke:6px var(--ink);
+    paint-order:stroke fill;opacity:0}
+  #count.go{animation:countPop .5s ease-out}
+  @keyframes countPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+    80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.92)}}
+  #stage.counting #cue,#stage.counting #ring{opacity:0}
+  #cue,#ring{transition:opacity .2s}
+
+  /* ---- results extras ---- */
+  .recordbadge{display:none;margin:8px auto 0;width:max-content;background:var(--coral);color:#fff;
+    border:4px solid var(--ink);border-radius:999px;padding:3px 15px;font-size:14px;font-weight:800;letter-spacing:1.5px;
+    box-shadow:0 3px 0 var(--ink);animation:starPop .5s cubic-bezier(.3,1.5,.5,1) .35s backwards}
+  .recordbadge.on{display:block}
+  #recordLine{margin-top:6px;font-size:14px;font-weight:700;color:var(--muted);min-height:18px}
+  #earned{margin-top:4px;font-size:14px;font-weight:800;color:var(--ink)}
+  #scrOver.guard .btn{pointer-events:none;opacity:.55}
+  #scrOver .btn{transition:opacity .25s}
+
   /* ---- how to play sheet ---- */
   #scrHow .sheet{width:100%;max-width:340px;padding:22px 20px;margin:auto 0}
   #scrHow h2{font-size:30px;font-weight:800;margin-bottom:16px}
@@ -387,7 +428,7 @@
   <div class="screen" id="scrTitle">
     <div class="toprow">
       <div class="coins pill"><span class="note">&#9834;</span><span id="coinCount">0</span></div>
-      <div style="width:52px"></div>
+      <button class="iconbtn" id="soundBtn" aria-label="Sound on or off">&#9834;</button>
     </div>
 
     <h1 class="logo"><span class="l1">Clap</span><span class="l2">Clap!</span></h1>
@@ -495,6 +536,7 @@
   <div id="hud">
     <div class="hudrow">
       <div class="stat pill"><small>SCORE</small><span id="score">0</span></div>
+      <button id="pauseBtn" aria-label="Pause"><i></i><i></i></button>
       <div class="stat pill"><small>BEST</small><span id="best">0</span></div>
     </div>
     <div id="combowrap">
@@ -518,6 +560,7 @@
       </svg>
     </div>
 
+    <div id="count"></div>
     <div id="cue">
       <div id="cueText" class="right">RIGHT</div>
       <div id="cyclerow"></div>
@@ -536,6 +579,16 @@
     </div>
   </div>
 
+  <!-- ============ PAUSE ============ -->
+  <div class="screen hidden" id="scrPause">
+    <div class="sheet sticker">
+      <h2>Paused</h2>
+      <p>Take a breather. Your streak is safe.</p>
+      <button class="btn coral" id="resumeBtn">Resume</button>
+      <button class="btn plain" id="quitBtn">Quit to menu</button>
+    </div>
+  </div>
+
   <!-- ============ RESULTS ============ -->
   <div class="screen hidden" id="scrOver">
     <div class="rcard sticker">
@@ -547,7 +600,10 @@
       </div>
       <div class="bignum" id="overScore">0</div>
       <div class="bignum-lbl">CLAPS IN A ROW</div>
+      <div class="recordbadge" id="recordBadge">NEW RECORD!</div>
+      <div id="recordLine"></div>
       <div id="overReason">Too slow!</div>
+      <div id="earned"></div>
       <div class="rstats">
         <div class="rstat"><span id="overCombo">&times;0</span><small>BEST COMBO</small></div>
         <div class="rstat"><span id="overBest">0</span><small>YOUR RECORD</small></div>
@@ -573,7 +629,7 @@
 
   /* ---------------- elements ---------------- */
   const scrTitle=$('scrTitle'), scrHow=$('scrHow'), scrOver=$('scrOver'),
-        scrPick=$('scrPick'), scrMeet=$('scrMeet'),
+        scrPick=$('scrPick'), scrMeet=$('scrMeet'), scrPause=$('scrPause'),
         stage=$('stage'), hud=$('hud');
   const cueText=$('cueText'), cyclerow=$('cyclerow'),
         ringFill=$('ringFill'), scoreEl=$('score'), bestEl=$('best'),
@@ -601,11 +657,42 @@
   const STICKERS=[10,20,30,45,60,80,110,150]; // score thresholds
   const PRAISE=['PERFECT!','NICE!','GREAT!','SUPER!','WOW!'];
 
+  /* ---------------- saving (Capacitor Preferences; memory-only in a plain browser) ---------------- */
+  const Store={
+    plug:(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Preferences)||null,
+    mem:null,
+    async load(){
+      if(this.plug){ try{ const r=await this.plug.get({key:'clapclap-save'}); if(r&&r.value) return JSON.parse(r.value); }catch(e){} }
+      return this.mem||{};
+    },
+    save(obj){
+      this.mem=obj;
+      if(this.plug){ try{ this.plug.set({key:'clapclap-save',value:JSON.stringify(obj)}); }catch(e){} }
+    }
+  };
+  function persist(){
+    Store.save({best,coins,unlocked,partner:partnerIdx,speed,cycleN,soundOn,seenHow});
+  }
+
+  /* ---------------- haptics ---------------- */
+  const Hap=(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics)||null;
+  function buzz(kind){
+    try{
+      if(Hap){
+        if(kind==='fail') Hap.notification({type:'ERROR'});
+        else Hap.impact({style: kind==='both'?'MEDIUM':'LIGHT'});
+        return;
+      }
+    }catch(e){}
+    if(navigator.vibrate){ try{ navigator.vibrate(kind==='fail'?[35,45,60]:(kind==='both'?22:12)); }catch(e){} }
+  }
+
   /* ---------------- state ---------------- */
   let speed='normal', cycleN=3;
   let START_WINDOW=SPEEDS[speed].start, MIN_WINDOW=SPEEDS[speed].min, DECAY=SPEEDS[speed].decay;
   let playing=false, moveIdx=0, score=0, best=0, coins=0, windowMs=START_WINDOW;
   let combo=0, bestCombo=0, stars=0, unlocked=0;
+  let soundOn=true, seenHow=false, paused=false, countTimers=[];
   let failTimer=null, barRAF=null, windowStart=0;
   let pendingSide=null, pendingTimer=null, locked=false;
   let singleSide=null, singleTimer=null;
@@ -629,7 +716,7 @@
     return buf;
   }
   function playClap(both){
-    if(!ac) return;
+    if(!ac||!soundOn) return;
     const t=ac.currentTime, len=.09, buf=noiseBuf(len);
     const src=ac.createBufferSource(); src.buffer=buf;
     const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=both?900:1400; bp.Q.value=.8;
@@ -642,7 +729,7 @@
     }
   }
   function playWhiff(){
-    if(!ac) return;
+    if(!ac||!soundOn) return;
     const t=ac.currentTime, len=.22;
     const buf=ac.createBuffer(1, Math.floor(ac.sampleRate*len), ac.sampleRate);
     const d=buf.getChannelData(0);
@@ -654,14 +741,14 @@
     src.connect(bp).connect(g).connect(ac.destination); src.start(t);
   }
   function playThud(){
-    if(!ac) return;
+    if(!ac||!soundOn) return;
     const t=ac.currentTime, o=ac.createOscillator(), g=ac.createGain();
     o.type='triangle'; o.frequency.setValueAtTime(200,t); o.frequency.exponentialRampToValueAtTime(96,t+.24);
     g.gain.setValueAtTime(.13,t); g.gain.exponentialRampToValueAtTime(.001,t+.28);
     o.connect(g).connect(ac.destination); o.start(t); o.stop(t+.3);
   }
   function playChime(){
-    if(!ac) return;
+    if(!ac||!soundOn) return;
     const t=ac.currentTime;
     [660,880,1320].forEach((f,i)=>{
       const o=ac.createOscillator(), g=ac.createGain();
@@ -686,7 +773,7 @@
      skin:'#8D5A3B', skinHi:'#AE7550', hair:'#2B1B12', outfit:'#FFC53D', accent:'#2F1F4A', look:'braids', unlock:0},
     {id:'zia',   name:'Zia',        trait:'Counts the beat out loud',
      skin:'#A9714B', skinHi:'#C68F63', hair:'#2B1B12', outfit:'#7C5CD6', accent:'#C9B6F5', look:'scarf',  unlock:0},
-    {id:'rex',   name:'Rex',        trait:'Roars on every BOTH clap',
+    {id:'rex',   name:'Rex',        trait:'Loves the BOTH claps best',
      skin:'#E8B48C', skinHi:'#FFD2AE', hair:'#4A3324', outfit:'#3FAE5A', accent:'#2FBFA0', look:'hood',   unlock:40},
     {id:'mo',    name:'Grandpa Mo', trait:'Been clapping for seventy years',
      skin:'#D9A57A', skinHi:'#F0C39A', hair:'#F2EDE4', outfit:'#4A7BC8', accent:'#E9E4DA', look:'beard',  unlock:60}
@@ -829,7 +916,7 @@
   $('meetNext').addEventListener('click',()=>stepMeet(1));
   $('meetGo').addEventListener('click',()=>{
     if(!isUnlocked(PARTNERS[meetIdx])) return;
-    partnerIdx=meetIdx; applyPartner();
+    partnerIdx=meetIdx; applyPartner(); persist();
     scrMeet.classList.add('hidden'); scrTitle.classList.remove('hidden');
   });
 
@@ -853,15 +940,18 @@
     b.classList.add('on');
     speed=b.dataset.s;
     START_WINDOW=SPEEDS[speed].start; MIN_WINDOW=SPEEDS[speed].min; DECAY=SPEEDS[speed].decay;
+    persist();
   });
   function setCycle(n){
     cycleN=Math.max(3,Math.min(7,n));
     $('cycleVal').textContent=cycleN;
+    persist();
   }
   $('cycleUp').addEventListener('click',()=>setCycle(cycleN+1));
   $('cycleDown').addEventListener('click',()=>setCycle(cycleN-1));
   $('howBtn').addEventListener('click',()=>{scrTitle.classList.add('hidden');scrHow.classList.remove('hidden');});
-  $('howBack').addEventListener('click',()=>{scrHow.classList.add('hidden');scrTitle.classList.remove('hidden');});
+  $('howBack').addEventListener('click',()=>{scrHow.classList.add('hidden');scrTitle.classList.remove('hidden');
+    if(!seenHow){ seenHow=true; persist(); }});
 
   /* ---------------- HUD ---------------- */
   function buildDots(){
@@ -936,7 +1026,7 @@
       moveHandTo('oR',{x:ptL.x,y:ptL.y-38},-2,1.12);
       spawnBurst(ptR); spawnBurst(ptL);
     }
-    playClap(mv==='both');
+    playClap(mv==='both'); buzz(mv==='both'?'both':'tap');
     setTimeout(resetHands,190);
   }
 
@@ -1002,8 +1092,60 @@
     if(score>3) stage.classList.add('nohints');
     windowMs=Math.max(MIN_WINDOW, windowMs*DECAY);
     moveIdx++;
-    setTimeout(()=>{ locked=false; if(playing) showMove(); },300);
+    setTimeout(()=>{ if(!playing||paused) return; locked=false; showMove(); },300);
   }
+
+  /* ---------------- 3-2-1 countdown ---------------- */
+  function clearCount(){ countTimers.forEach(clearTimeout); countTimers=[]; }
+  function countdown(done){
+    clearCount();
+    locked=true;
+    stage.classList.add('counting');
+    const el=$('count'), steps=['3','2','1','CLAP!'];
+    steps.forEach((t,i)=>{
+      countTimers.push(setTimeout(()=>{
+        el.textContent=t;
+        el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+        if(i<3) buzz('tap');
+      }, i*520));
+    });
+    countTimers.push(setTimeout(()=>{
+      stage.classList.remove('counting');
+      locked=false;
+      done();
+    }, steps.length*520-120));
+  }
+
+  /* ---------------- pause ---------------- */
+  function pauseGame(){
+    if(!playing||paused) return;
+    paused=true; locked=true;
+    clearCount();
+    clearTimeout(failTimer); clearTimeout(pendingTimer); clearTimeout(singleTimer);
+    pendingSide=null; singleSide=null;
+    cancelAnimationFrame(barRAF);
+    stage.classList.remove('counting');
+    scrPause.classList.remove('hidden');
+  }
+  function resumeGame(){
+    if(!paused) return;
+    scrPause.classList.add('hidden');
+    paused=false;
+    // replay the current cue with a fresh timer after a short countdown
+    countdown(()=>{ if(playing&&!paused) showMove(); });
+  }
+  $('pauseBtn').addEventListener('click',e=>{ e.stopPropagation(); pauseGame(); });
+  $('pauseBtn').addEventListener('touchstart',e=>{ e.stopPropagation(); },{passive:true});
+  $('resumeBtn').addEventListener('click',()=>{ ensureAudio(); resumeGame(); });
+  $('quitBtn').addEventListener('click',()=>{
+    paused=false; playing=false; locked=true;
+    scrPause.classList.add('hidden');
+    stage.classList.remove('on'); hud.classList.remove('on');
+    scrTitle.classList.remove('hidden');
+  });
+  // phone call, notification, app switch: pause instead of failing
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden) pauseGame(); });
+  window.addEventListener('blur',()=>pauseGame());
 
   // one mistake ends the round
   function mistake(reason, delay){
@@ -1013,7 +1155,7 @@
     pendingSide=null; singleSide=null;
     cancelAnimationFrame(barRAF);
     combo=0; paintCombo();
-    playThud();
+    playThud(); buzz('fail');
     flashZone(zoneL,'flash-bad'); flashZone(zoneR,'flash-bad');
     setTimeout(()=>roundOver(reason), delay||620);
   }
@@ -1031,12 +1173,22 @@
     playing=false;
     const wasUnlocked=PARTNERS.filter(isUnlocked).length;
     cancelAnimationFrame(barRAF);
+    const prevBest=best;
+    const newRecord = score>prevBest && prevBest>0;
     if(score>best) best=score;
     bestEl.textContent=best;
     coins+=stars; $('coinCount').textContent=coins;
 
     $('overScore').textContent=score;
     $('overReason').textContent=reason;
+    $('recordBadge').classList.toggle('on', newRecord);
+    const gap=prevBest-score;
+    $('recordLine').textContent =
+        newRecord ? 'You beat '+prevBest+'!'
+      : (score>0 && gap>0 && gap<=5) ? 'So close! Just '+(gap+1)+' more to beat your record'
+      : '';
+    $('earned').textContent = stars>0 ? '+'+stars+' \u266A earned' : '';
+    if(newRecord) playChime();
     $('overCombo').textContent='\u00D7'+bestCombo;
     $('overBest').textContent=best;
 
@@ -1045,7 +1197,7 @@
 
     // sticker book
     const before=unlocked;
-    unlocked=STICKERS.filter(t=>score>=t).length;
+    unlocked=STICKERS.filter(t=>best>=t).length;
     $('bookCount').textContent=unlocked+' / '+STICKERS.length;
     const slots=$('slots'); slots.innerHTML='';
     for(let i=0;i<4;i++){
@@ -1063,7 +1215,7 @@
     // pick one message for the hint slot, without ever bailing out early
     const nowUnlocked=PARTNERS.filter(isUnlocked).length;
     const nextP=PARTNERS.find(p=>!isUnlocked(p));
-    const next=STICKERS.find(t=>score<t);
+    const next=STICKERS.find(t=>best<t);
     let hint;
     if(nowUnlocked>wasUnlocked){
       const fresh=PARTNERS.filter(isUnlocked)[nowUnlocked-1];
@@ -1078,9 +1230,12 @@
     }
     $('bookHint').textContent=hint;
 
+    persist();
     setTimeout(()=>{
       stage.classList.remove('on'); hud.classList.remove('on');
+      scrOver.classList.add('guard');
       scrOver.classList.remove('hidden');
+      setTimeout(()=>scrOver.classList.remove('guard'), 750);
     },260);
   }
 
@@ -1149,8 +1304,9 @@
     scrTitle.classList.add('hidden'); scrHow.classList.add('hidden'); scrOver.classList.add('hidden');
     scrPick.classList.add('hidden'); scrMeet.classList.add('hidden');
     stage.classList.add('on'); hud.classList.add('on');
-    playing=true; overShown=false;
-    setTimeout(showMove,450);
+    playing=true; overShown=false; paused=false;
+    scrPause.classList.add('hidden');
+    countdown(()=>{ if(playing&&!paused) showMove(); });
   }
   $('playBtn').addEventListener('click',startGame);
   $('againBtn').addEventListener('click',startGame);
@@ -1160,7 +1316,33 @@
     scrTitle.classList.remove('hidden');
   });
 
-  buildDots(); applyPartner();
+  function paintSound(){ $('soundBtn').classList.toggle('off', !soundOn); }
+  $('soundBtn').addEventListener('click',()=>{ soundOn=!soundOn; paintSound(); persist(); if(soundOn){ ensureAudio(); playChime(); } });
+
+  function applySpeed(){
+    document.querySelectorAll('#speeds .seg').forEach(b=>b.classList.toggle('on', b.dataset.s===speed));
+    START_WINDOW=SPEEDS[speed].start; MIN_WINDOW=SPEEDS[speed].min; DECAY=SPEEDS[speed].decay;
+  }
+
+  (async function boot(){
+    const d=await Store.load();
+    if(typeof d.best==='number') best=d.best;
+    if(typeof d.coins==='number') coins=d.coins;
+    if(typeof d.unlocked==='number') unlocked=d.unlocked;
+    if(typeof d.soundOn==='boolean') soundOn=d.soundOn;
+    if(typeof d.seenHow==='boolean') seenHow=d.seenHow;
+    if(d.speed && SPEEDS[d.speed]) speed=d.speed;
+    if(typeof d.cycleN==='number') cycleN=Math.max(3,Math.min(7,d.cycleN));
+    if(typeof d.partner==='number' && PARTNERS[d.partner] && isUnlocked(PARTNERS[d.partner])) partnerIdx=d.partner;
+
+    bestEl.textContent=best;
+    $('coinCount').textContent=coins;
+    $('cycleVal').textContent=cycleN;
+    applySpeed(); paintSound(); buildDots(); applyPartner();
+
+    // first launch: show how to play before anything else
+    if(!seenHow){ scrTitle.classList.add('hidden'); scrHow.classList.remove('hidden'); }
+  })();
 })();
 </script>
 </body>
